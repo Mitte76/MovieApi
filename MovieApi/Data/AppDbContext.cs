@@ -28,6 +28,12 @@ namespace MovieApi.Data
                     t.HasCheckConstraint("CK_Review_Rating", "[Rating] >= 1 AND [Rating] <= 5")
                 );
 
+            modelBuilder
+                .Entity<Movie>()
+                .HasMany(m => m.Actors)
+                .WithMany(a => a.Movies)
+                .UsingEntity("MovieActor");
+
             base.OnModelCreating(modelBuilder);
         }
     }
