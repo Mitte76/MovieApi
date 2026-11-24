@@ -3,11 +3,11 @@ using MovieApi.Models;
 
 namespace MovieApi.Data
 {
-    public class AppDbContext : DbContext
+    public class MovieContext : DbContext
     {
         public DbSet<Movie> Movies { get; set; }
 
-        public AppDbContext(DbContextOptions<AppDbContext> options)
+        public MovieContext(DbContextOptions<MovieContext> options)
             : base(options) { }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

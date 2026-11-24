@@ -10,7 +10,7 @@ using MovieApi.Data;
 
 namespace MovieApi.Migrations
 {
-    [DbContext(typeof(AppDbContext))]
+    [DbContext(typeof(MovieContext))]
     [Migration("20261124130026_InitialCreate")]
     partial class InitialCreate
     {
