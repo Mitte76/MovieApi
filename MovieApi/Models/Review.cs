@@ -15,5 +15,6 @@ namespace MovieApi.Models
         [Required]
         public string Comment { get; set; } = string.Empty;
         public Movie Movie { get; set; } = null!;
+        public int MovieId { get; set; }
     }
 }

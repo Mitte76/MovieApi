@@ -20,6 +20,14 @@ namespace MovieApi.Data
 
             modelBuilder.Entity<MovieDetails>().Property(x => x.Synopsis).HasMaxLength(2000);
 
+            modelBuilder.Entity<Review>().Property(x => x.ReviewerName).HasMaxLength(100);
+
+            modelBuilder
+                .Entity<Review>()
+                .ToTable(t =>
+                    t.HasCheckConstraint("CK_Review_Rating", "[Rating] >= 1 AND [Rating] <= 5")
+                );
+
             base.OnModelCreating(modelBuilder);
         }
     }

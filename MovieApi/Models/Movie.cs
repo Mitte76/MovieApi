@@ -12,5 +12,7 @@ namespace MovieApi.Models
         public string Title { get; set; } = string.Empty;
         public required string Genre { get; set; }
         public MovieDetails? MovieDetails { get; set; }
+        public ICollection<Review> Reviews { get; set; } = [];
+        public ICollection<Actor> Actors { get; set; } = [];
     }
 }
