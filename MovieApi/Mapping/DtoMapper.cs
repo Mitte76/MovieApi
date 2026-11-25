@@ -34,6 +34,7 @@ namespace MovieApi.Mapping
                 Reviews = movie.Reviews
                     .Select(review => new ReviewDto
                     {
+                        Id = review.Id,
                         Rating = review.Rating,
                         ReviewerName = review.ReviewerName,
                         Comment = review.Comment
@@ -50,7 +51,5 @@ namespace MovieApi.Mapping
                     .ToList()
             };
         }
-
-
     }
 }

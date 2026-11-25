@@ -37,7 +37,13 @@ public class MoviesController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<MovieDto>> GetMovie(int id)
     {
-        var movie = await _context.Movies.FindAsync(id);
+        var movie = await _context.Movies
+            .AsNoTracking()
+            .Include(movie => movie.Details)
+            .Include(movie => movie.Genres)
+            .Include(movie => movie.Reviews)
+            .Include(movie => movie.Actors)
+            .FirstOrDefaultAsync(movie => movie.Id == id);
 
         if (movie == null)
         {
@@ -84,25 +90,65 @@ public class MoviesController : ControllerBase
     // POST: api/Movie
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPost]
-    public async Task<ActionResult<MovieDto>> PostMovie(MovieDto dtoMovie)
+    public async Task<ActionResult<MovieDto>> PostMovie(CreateMovieDto dtoMovie)
     {
+        var genreIds = dtoMovie.GenreIds.Distinct().ToArray();
+        var genres = await _context.Set<Genre>()
+            .Where(genre => genreIds.Contains(genre.Id))
+            .ToListAsync();
+
+        if (genres.Count != genreIds.Length)
+        {
+            ModelState.AddModelError(nameof(dtoMovie.GenreIds), "One or more genre IDs do not exist.");
+        }
+
+        var actorIds = dtoMovie.ActorIds.Distinct().ToArray();
+        var actors = await _context.Set<Actor>()
+            .Where(actor => actorIds.Contains(actor.Id))
+            .ToListAsync();
+
+        if (actors.Count != actorIds.Length)
+        {
+            ModelState.AddModelError(nameof(dtoMovie.ActorIds), "One or more actor IDs do not exist.");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
         var movie = new Movie
         {
             Year = dtoMovie.Year,
             Duration = dtoMovie.Duration,
             Title = dtoMovie.Title,
-            Genres = dtoMovie.Genres
-                .Select(genre => new Genre { GenreName = genre.GenreName })
-                .ToList()
+            Genres = genres,
+            Actors = actors,
+            Reviews = dtoMovie.Reviews
+                .Select(review => new Review
+                {
+                    Rating = review.Rating,
+                    ReviewerName = review.ReviewerName,
+                    Comment = review.Comment
+                })
+                .ToList(),
+            Details = dtoMovie.Details is null
+                ? null
+                : new MovieDetails
+                {
+                    Budget = dtoMovie.Details.Budget,
+                    Synopsis = dtoMovie.Details.Synopsis,
+                    Language = dtoMovie.Details.Language
+                }
         };
-
-        //var movie = DtoMapper.ToEntity(dto);
-
 
         _context.Movies.Add(movie);
         await _context.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetMovie), new { id = movie.Id }, movie);
+        return CreatedAtAction(
+            nameof(GetMovie),
+            new { id = movie.Id },
+            DtoMapper.ToDto(movie));
     }
 
     // DELETE: api/Movie/5

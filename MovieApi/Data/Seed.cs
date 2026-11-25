@@ -8,10 +8,32 @@ namespace MovieAPI.Data.Seed
     {
         public static async Task SeedAsync(MovieApiContext context)
         {
-            // Kontrollera om databasen redan har data för att undvika dubbletter
+            var genreNames = new[] { "Crime", "Thriller", "Comedy", "Satire" };
+            var genres = await context.Set<Genre>().ToListAsync();
+
+            foreach (var genreName in genreNames)
+            {
+                if (!genres.Any(genre => string.Equals(
+                    genre.GenreName,
+                    genreName,
+                    StringComparison.OrdinalIgnoreCase)))
+                {
+                    var genre = new Genre { GenreName = genreName };
+                    context.Set<Genre>().Add(genre);
+                    genres.Add(genre);
+                }
+            }
+
+            await context.SaveChangesAsync();
+
+            var genresByName = genres
+                .GroupBy(genre => genre.GenreName, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(group => group.Key, group => group.First(), StringComparer.OrdinalIgnoreCase);
+
+            // Seed genre-katalogen även om filmer redan finns, men skapa inte filmer igen.
             if (await context.Movies.AnyAsync())
             {
-                return;   // Databasen är redan seedad
+                return;
             }
 
             var movies = new Movie[]
@@ -36,10 +58,7 @@ namespace MovieAPI.Data.Seed
                     }
                     },
 
-                    Genres = new Genre[] {
-                        new Genre { GenreName = "Crime" },
-                        new Genre { GenreName = "Thriller" }
-                    },
+                    Genres = [genresByName["Crime"], genresByName["Thriller"]],
                     Reviews = new Review[] {
                         new Review {
                             ReviewerName = "Adam Brannon",
@@ -75,10 +94,7 @@ namespace MovieAPI.Data.Seed
                     }
                     },
 
-                    Genres = new Genre[] {
-                        new Genre { GenreName = "Comedy" },
-                        new Genre { GenreName = "Satire" }
-                    },
+                    Genres = [genresByName["Comedy"], genresByName["Satire"]],
                     Reviews = new Review[] {
                         new Review {
                             ReviewerName = "Adam Brannon",
@@ -110,10 +126,7 @@ namespace MovieAPI.Data.Seed
                       }
                     },
 
-                    Genres = new Genre[] {
-                        new Genre { GenreName = "Crime" },
-                        new Genre { GenreName = "Thriller" }
-                    },
+                    Genres = [genresByName["Crime"], genresByName["Thriller"]],
                     Reviews = new Review[] {
                         new Review {
                             ReviewerName = "Adam Brannon",
