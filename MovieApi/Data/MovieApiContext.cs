@@ -3,16 +3,16 @@ using MovieApi.Models;
 
 namespace MovieApi.Data
 {
-    public class MovieContext : DbContext
+    public class MovieApiContext : DbContext
     {
         public DbSet<Movie> Movies { get; set; }
 
-        public MovieContext(DbContextOptions<MovieContext> options)
+        public MovieApiContext(DbContextOptions<MovieApiContext> options)
             : base(options) { }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Movie>().Property(x => x.Genre).HasMaxLength(50);
+            modelBuilder.Entity<Genre>().Property(x => x.GenreName).HasMaxLength(50);
 
             modelBuilder.Entity<Movie>().Property(x => x.Title).HasMaxLength(200);
 

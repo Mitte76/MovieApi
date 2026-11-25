@@ -1,16 +1,17 @@
 using Microsoft.EntityFrameworkCore;
 using MovieApi.Data;
+using MovieAPI.Data.Seed;
 
 namespace MovieApi
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
-            builder.Services.AddDbContext<MovieContext>(options =>
+            builder.Services.AddDbContext<MovieApiContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
             );
 
@@ -20,6 +21,13 @@ namespace MovieApi
             builder.Services.AddSwaggerGen();
 
             var app = builder.Build();
+
+            using (var scope = app.Services.CreateScope())
+            {
+                var context =
+                scope.ServiceProvider.GetRequiredService<MovieApiContext>();
+                await DbSeeder.SeedAsync(context);
+            }
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())

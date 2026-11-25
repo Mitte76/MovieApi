@@ -2,29 +2,40 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MovieApi.Data;
 using MovieApi.DTOs;
+using MovieApi.Mapping;
 using MovieApi.Models;
 
 [Route("api/[controller]")]
 [ApiController]
 public class MoviesController : ControllerBase
 {
-    private readonly MovieContext _context;
+    private readonly MovieApiContext _context;
 
-    public MoviesController(MovieContext context)
+    public MoviesController(MovieApiContext context)
     {
         _context = context;
     }
 
     // GET: api/Movie
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Movie>>> GetMovie()
+    public async Task<ActionResult<IEnumerable<MovieDto>>> GetMovie()
     {
-        return await _context.Movies.ToListAsync();
+        var movies = await _context.Movies
+            .AsNoTracking()
+            .Include(movie => movie.Details)
+            .Include(movie => movie.Genres)
+            .Include(movie => movie.Reviews)
+            .Include(movie => movie.Actors)
+            .ToListAsync();
+
+        return movies
+            .Select(DtoMapper.ToDto)
+            .ToList();
     }
 
     // GET: api/Movie/5
     [HttpGet("{id}")]
-    public async Task<ActionResult<Movie>> GetMovie(int id)
+    public async Task<ActionResult<MovieDto>> GetMovie(int id)
     {
         var movie = await _context.Movies.FindAsync(id);
 
@@ -32,8 +43,10 @@ public class MoviesController : ControllerBase
         {
             return NotFound();
         }
+        MovieDto movieDto = DtoMapper.ToDto(movie);
 
-        return movie;
+
+        return movieDto;
     }
 
     // PUT: api/Movie/5
@@ -67,28 +80,24 @@ public class MoviesController : ControllerBase
         return NoContent();
     }
 
-    //// POST: api/Movie
-    //// To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-    //[HttpPost]
-    //public async Task<ActionResult<Movie>> PostMovie(Movie movie)
-    //{
-    //    _context.Movies.Add(movie);
-    //    await _context.SaveChangesAsync();
 
-    //    return CreatedAtAction("GetMovie", new { id = movie.Id }, movie);
-    //}
     // POST: api/Movie
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPost]
-    public async Task<ActionResult<Movie>> PostMovie(CreateMovieDto dtoMovie)
+    public async Task<ActionResult<MovieDto>> PostMovie(MovieDto dtoMovie)
     {
         var movie = new Movie
         {
             Year = dtoMovie.Year,
             Duration = dtoMovie.Duration,
             Title = dtoMovie.Title,
-            Genre = dtoMovie.Genre
+            Genres = dtoMovie.Genres
+                .Select(genre => new Genre { GenreName = genre.GenreName })
+                .ToList()
         };
+
+        //var movie = DtoMapper.ToEntity(dto);
+
 
         _context.Movies.Add(movie);
         await _context.SaveChangesAsync();
