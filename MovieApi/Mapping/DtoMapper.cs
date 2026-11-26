@@ -1,4 +1,4 @@
-﻿using MovieApi.DTOs;
+﻿using MovieApi.DTOs.Movies.Read;
 using MovieApi.Models;
 
 namespace MovieApi.Mapping
@@ -22,9 +22,29 @@ namespace MovieApi.Mapping
                     })
                     .ToList(),
 
-                MovieDetails = movie.Details is null
+            };
+        }
+
+
+        public static MovieDetailedDto ToDetailedDto(Movie movie)
+        {
+            return new MovieDetailedDto
+            {
+                Id = movie.Id,
+                Year = movie.Year,
+                Duration = movie.Duration,
+                Title = movie.Title,
+                Genres = movie.Genres
+                    .Select(genre => new GenreDto
+                    {
+                        Id = genre.Id,
+                        GenreName = genre.GenreName
+                    })
+                    .ToList(),
+
+                Details = movie.Details is null
                     ? null
-                    : new MovieDetailsDto
+                    : new DetailsDto
                     {
                         Budget = movie.Details.Budget,
                         Synopsis = movie.Details.Synopsis,

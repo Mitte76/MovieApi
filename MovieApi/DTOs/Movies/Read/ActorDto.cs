@@ -1,4 +1,4 @@
-﻿namespace MovieApi.DTOs
+namespace MovieApi.DTOs.Movies.Read
 {
     public class ActorDto
     {

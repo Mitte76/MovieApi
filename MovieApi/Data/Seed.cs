@@ -30,7 +30,82 @@ namespace MovieAPI.Data.Seed
                 .GroupBy(genre => genre.GenreName, StringComparer.OrdinalIgnoreCase)
                 .ToDictionary(group => group.Key, group => group.First(), StringComparer.OrdinalIgnoreCase);
 
-            // Seed genre-katalogen även om filmer redan finns, men skapa inte filmer igen.
+            var actorBirthYears = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["Harvey Keitel"] = "1939",
+                ["Tim Roth"] = "1961",
+                ["Graham Chapman"] = "1941",
+                ["John Cleese"] = "1939",
+                ["Eric Idle"] = "1943",
+                ["Jamie Foxx"] = "1967",
+                ["Christoph Waltz"] = "1956"
+            };
+
+            var actors = await context.Set<Actor>().ToListAsync();
+            foreach (var actorEntry in actorBirthYears)
+            {
+                if (!actors.Any(actor => string.Equals(
+                    actor.Name,
+                    actorEntry.Key,
+                    StringComparison.OrdinalIgnoreCase)))
+                {
+                    var actor = new Actor
+                    {
+                        Name = actorEntry.Key,
+                        BirthYear = actorEntry.Value
+                    };
+                    context.Set<Actor>().Add(actor);
+                    actors.Add(actor);
+                }
+            }
+
+            await context.SaveChangesAsync();
+
+            var actorsByName = actors
+                .GroupBy(actor => actor.Name, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(group => group.Key, group => group.First(), StringComparer.OrdinalIgnoreCase);
+
+            var seededMovieActors = new Dictionary<string, string[]>
+            {
+                ["De hänsynslösa (Reservoir Dogs)"] = ["Harvey Keitel", "Tim Roth"],
+                ["Monty Python's Life of Brian"] = ["Graham Chapman", "John Cleese", "Eric Idle"],
+                ["Django Unchained"] = ["Jamie Foxx", "Christoph Waltz"]
+            };
+
+            var seededMovieGenres = new Dictionary<string, string[]>
+            {
+                ["De hänsynslösa (Reservoir Dogs)"] = ["Crime", "Thriller"],
+                ["Monty Python's Life of Brian"] = ["Comedy", "Satire"],
+                ["Django Unchained"] = ["Crime", "Thriller"]
+            };
+
+            var existingSeededMovies = await context.Movies
+                .Include(movie => movie.Genres)
+                .Include(movie => movie.Actors)
+                .Where(movie => seededMovieGenres.Keys.Contains(movie.Title))
+                .ToListAsync();
+
+            foreach (var movie in existingSeededMovies)
+            {
+                movie.Genres.Clear();
+                foreach (var genreName in seededMovieGenres[movie.Title])
+                {
+                    movie.Genres.Add(genresByName[genreName]);
+                }
+
+                movie.Actors.Clear();
+                foreach (var actorName in seededMovieActors[movie.Title])
+                {
+                    movie.Actors.Add(actorsByName[actorName]);
+                }
+            }
+
+            if (existingSeededMovies.Count > 0)
+            {
+                await context.SaveChangesAsync();
+            }
+
+            // Seed genre-katalogen even when movies already exist, but don't add sample movies twice.
             if (await context.Movies.AnyAsync())
             {
                 return;
@@ -44,19 +119,7 @@ namespace MovieAPI.Data.Seed
                     Language = "Engelska",
                     Budget = "$1.2–3 million"
                     },
-                    Actors = new Actor[]
-                    {
-                    new Actor
-                    {
-                        Name = "Harvey Keitel",
-                        BirthYear = "1939"
-                    },
-                    new Actor
-                    {
-                        Name = "Tim Roth",
-                        BirthYear = "1961"
-                    }
-                    },
+                    Actors = [actorsByName["Harvey Keitel"], actorsByName["Tim Roth"]],
 
                     Genres = [genresByName["Crime"], genresByName["Thriller"]],
                     Reviews = new Review[] {
@@ -75,24 +138,11 @@ namespace MovieAPI.Data.Seed
                         Budget = "$4 million"
                     },
 
-                    Actors = new Actor[]
-                    {
-                    new Actor
-                    {
-                        Name = "Graham Chapman",
-                        BirthYear = "1941"
-                    },
-                    new Actor
-                    {
-                        Name = "John Cleese",
-                        BirthYear = "1939"
-                    },
-                    new Actor
-                    {
-                        Name = "Eric Idle",
-                        BirthYear = "1943"
-                    }
-                    },
+                    Actors = [
+                        actorsByName["Graham Chapman"],
+                        actorsByName["John Cleese"],
+                        actorsByName["Eric Idle"]
+                    ],
 
                     Genres = [genresByName["Comedy"], genresByName["Satire"]],
                     Reviews = new Review[] {
@@ -112,19 +162,7 @@ namespace MovieAPI.Data.Seed
                         Language = "Engelska",
                         Budget = "$4 million"
                     },
-                    Actors = new Actor[]
-                    {
-                      new Actor
-                      {
-                        Name = "Jamie Foxx",
-                        BirthYear = "1967"
-                      },
-                      new Actor
-                      {
-                        Name = "Christoph Waltz",
-                        BirthYear = "1956"
-                      }
-                    },
+                    Actors = [actorsByName["Jamie Foxx"], actorsByName["Christoph Waltz"]],
 
                     Genres = [genresByName["Crime"], genresByName["Thriller"]],
                     Reviews = new Review[] {

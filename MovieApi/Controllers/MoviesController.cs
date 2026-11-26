@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MovieApi.Data;
-using MovieApi.DTOs;
+using MovieApi.DTOs.Movies.Create;
+using MovieApi.DTOs.Movies.Read;
+using MovieApi.DTOs.Movies.Update;
 using MovieApi.Mapping;
 using MovieApi.Models;
 
@@ -56,33 +58,76 @@ public class MoviesController : ControllerBase
     }
 
     // PUT: api/Movie/5
-    // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPut("{id}")]
-    public async Task<IActionResult> PutMovie(int? id, Movie movie)
+    public async Task<IActionResult> PutMovie(int id, UpdateMovieDto dtoMovie)
     {
-        if (id != movie.Id)
+        var movie = await _context.Movies
+            .Include(movie => movie.Genres)
+            .Include(movie => movie.Actors)
+            .Include(movie => movie.Details)
+            .FirstOrDefaultAsync(movie => movie.Id == id);
+
+        if (movie is null)
         {
-            return BadRequest();
+            return NotFound();
         }
 
-        _context.Entry(movie).State = EntityState.Modified;
+        var genreIds = dtoMovie.GenreIds.Distinct().ToArray();
+        var genres = await _context.Set<Genre>()
+            .Where(genre => genreIds.Contains(genre.Id))
+            .ToListAsync();
 
-        try
+        if (genres.Count != genreIds.Length)
         {
-            await _context.SaveChangesAsync();
+            ModelState.AddModelError(nameof(dtoMovie.GenreIds), "One or more genre IDs do not exist.");
         }
-        catch (DbUpdateConcurrencyException)
+
+        var actorIds = dtoMovie.ActorIds.Distinct().ToArray();
+        var actors = await _context.Set<Actor>()
+            .Where(actor => actorIds.Contains(actor.Id))
+            .ToListAsync();
+
+        if (actors.Count != actorIds.Length)
         {
-            if (!MovieExists(id))
+            ModelState.AddModelError(nameof(dtoMovie.ActorIds), "One or more actor IDs do not exist.");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
+        movie.Title = dtoMovie.Title;
+        movie.Year = dtoMovie.Year;
+        movie.Duration = dtoMovie.Duration;
+        movie.Genres = genres;
+        movie.Actors = actors;
+
+        if (dtoMovie.Details is null)
+        {
+            if (movie.Details is not null)
             {
-                return NotFound();
-            }
-            else
-            {
-                throw;
+                _context.Remove(movie.Details);
+                movie.Details = null;
             }
         }
+        else if (movie.Details is null)
+        {
+            movie.Details = new MovieDetails
+            {
+                Budget = dtoMovie.Details.Budget,
+                Synopsis = dtoMovie.Details.Synopsis,
+                Language = dtoMovie.Details.Language
+            };
+        }
+        else
+        {
+            movie.Details.Budget = dtoMovie.Details.Budget;
+            movie.Details.Synopsis = dtoMovie.Details.Synopsis;
+            movie.Details.Language = dtoMovie.Details.Language;
+        }
 
+        await _context.SaveChangesAsync();
         return NoContent();
     }
 

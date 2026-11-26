@@ -1,8 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
-namespace MovieApi.DTOs
+namespace MovieApi.DTOs.Movies.Update
 {
-    public class MovieDetailsDto
+    public class UpdateMovieDetailsDto
     {
         public string Budget { get; set; } = string.Empty;
 
