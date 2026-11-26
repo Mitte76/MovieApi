@@ -5,6 +5,7 @@ namespace MovieApi.Data
 {
     public class MovieApiContext : DbContext
     {
+        public DbSet<MovieApi.Models.Actor> Actor { get; set; } = default!;
         public DbSet<Movie> Movies { get; set; }
 
         public MovieApiContext(DbContextOptions<MovieApiContext> options)

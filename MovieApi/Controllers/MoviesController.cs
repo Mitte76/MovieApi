@@ -31,7 +31,7 @@ public class MoviesController : ControllerBase
             .ToListAsync();
 
         return movies
-            .Select(DtoMapper.ToDto)
+            .Select(MovieDtoMapper.ToDto)
             .ToList();
     }
 
@@ -51,7 +51,7 @@ public class MoviesController : ControllerBase
         {
             return NotFound();
         }
-        MovieDto movieDto = DtoMapper.ToDto(movie);
+        MovieDto movieDto = MovieDtoMapper.ToDto(movie);
 
 
         return movieDto;
@@ -193,7 +193,7 @@ public class MoviesController : ControllerBase
         return CreatedAtAction(
             nameof(GetMovie),
             new { id = movie.Id },
-            DtoMapper.ToDto(movie));
+            MovieDtoMapper.ToDto(movie));
     }
 
     // DELETE: api/Movie/5
