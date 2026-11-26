@@ -10,7 +10,7 @@ using MovieApi.Data;
 
 namespace MovieApi.Migrations
 {
-    [DbContext(typeof(MovieContext))]
+    [DbContext(typeof(MovieApiContext))]
     [Migration("20261124140541_AddMovieActors")]
     partial class AddMovieActors
     {

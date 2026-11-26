@@ -1,99 +1,199 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MovieApi.Data;
-using MovieApi.DTOs;
+using MovieApi.DTOs.Movies.Create;
+using MovieApi.DTOs.Movies.Read;
+using MovieApi.DTOs.Movies.Update;
+using MovieApi.Mapping;
 using MovieApi.Models;
 
 [Route("api/[controller]")]
 [ApiController]
 public class MoviesController : ControllerBase
 {
-    private readonly MovieContext _context;
+    private readonly MovieApiContext _context;
 
-    public MoviesController(MovieContext context)
+    public MoviesController(MovieApiContext context)
     {
         _context = context;
     }
 
     // GET: api/Movie
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Movie>>> GetMovie()
+    public async Task<ActionResult<IEnumerable<MovieDto>>> GetMovie()
     {
-        return await _context.Movies.ToListAsync();
+        var movies = await _context.Movies
+            .AsNoTracking()
+            .Include(movie => movie.Details)
+            .Include(movie => movie.Genres)
+            .Include(movie => movie.Reviews)
+            .Include(movie => movie.Actors)
+            .ToListAsync();
+
+        return movies
+            .Select(DtoMapper.ToDto)
+            .ToList();
     }
 
     // GET: api/Movie/5
     [HttpGet("{id}")]
-    public async Task<ActionResult<Movie>> GetMovie(int id)
+    public async Task<ActionResult<MovieDto>> GetMovie(int id)
     {
-        var movie = await _context.Movies.FindAsync(id);
+        var movie = await _context.Movies
+            .AsNoTracking()
+            .Include(movie => movie.Details)
+            .Include(movie => movie.Genres)
+            .Include(movie => movie.Reviews)
+            .Include(movie => movie.Actors)
+            .FirstOrDefaultAsync(movie => movie.Id == id);
 
         if (movie == null)
         {
             return NotFound();
         }
+        MovieDto movieDto = DtoMapper.ToDto(movie);
 
-        return movie;
+
+        return movieDto;
     }
 
     // PUT: api/Movie/5
-    // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPut("{id}")]
-    public async Task<IActionResult> PutMovie(int? id, Movie movie)
+    public async Task<IActionResult> PutMovie(int id, UpdateMovieDto dtoMovie)
     {
-        if (id != movie.Id)
+        var movie = await _context.Movies
+            .Include(movie => movie.Genres)
+            .Include(movie => movie.Actors)
+            .Include(movie => movie.Details)
+            .FirstOrDefaultAsync(movie => movie.Id == id);
+
+        if (movie is null)
         {
-            return BadRequest();
+            return NotFound();
         }
 
-        _context.Entry(movie).State = EntityState.Modified;
+        var genreIds = dtoMovie.GenreIds.Distinct().ToArray();
+        var genres = await _context.Set<Genre>()
+            .Where(genre => genreIds.Contains(genre.Id))
+            .ToListAsync();
 
-        try
+        if (genres.Count != genreIds.Length)
         {
-            await _context.SaveChangesAsync();
+            ModelState.AddModelError(nameof(dtoMovie.GenreIds), "One or more genre IDs do not exist.");
         }
-        catch (DbUpdateConcurrencyException)
+
+        var actorIds = dtoMovie.ActorIds.Distinct().ToArray();
+        var actors = await _context.Set<Actor>()
+            .Where(actor => actorIds.Contains(actor.Id))
+            .ToListAsync();
+
+        if (actors.Count != actorIds.Length)
         {
-            if (!MovieExists(id))
+            ModelState.AddModelError(nameof(dtoMovie.ActorIds), "One or more actor IDs do not exist.");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
+        movie.Title = dtoMovie.Title;
+        movie.Year = dtoMovie.Year;
+        movie.Duration = dtoMovie.Duration;
+        movie.Genres = genres;
+        movie.Actors = actors;
+
+        if (dtoMovie.Details is null)
+        {
+            if (movie.Details is not null)
             {
-                return NotFound();
-            }
-            else
-            {
-                throw;
+                _context.Remove(movie.Details);
+                movie.Details = null;
             }
         }
+        else if (movie.Details is null)
+        {
+            movie.Details = new MovieDetails
+            {
+                Budget = dtoMovie.Details.Budget,
+                Synopsis = dtoMovie.Details.Synopsis,
+                Language = dtoMovie.Details.Language
+            };
+        }
+        else
+        {
+            movie.Details.Budget = dtoMovie.Details.Budget;
+            movie.Details.Synopsis = dtoMovie.Details.Synopsis;
+            movie.Details.Language = dtoMovie.Details.Language;
+        }
 
+        await _context.SaveChangesAsync();
         return NoContent();
     }
 
-    //// POST: api/Movie
-    //// To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-    //[HttpPost]
-    //public async Task<ActionResult<Movie>> PostMovie(Movie movie)
-    //{
-    //    _context.Movies.Add(movie);
-    //    await _context.SaveChangesAsync();
 
-    //    return CreatedAtAction("GetMovie", new { id = movie.Id }, movie);
-    //}
     // POST: api/Movie
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPost]
-    public async Task<ActionResult<Movie>> PostMovie(CreateMovieDto dtoMovie)
+    public async Task<ActionResult<MovieDto>> PostMovie(CreateMovieDto dtoMovie)
     {
+        var genreIds = dtoMovie.GenreIds.Distinct().ToArray();
+        var genres = await _context.Set<Genre>()
+            .Where(genre => genreIds.Contains(genre.Id))
+            .ToListAsync();
+
+        if (genres.Count != genreIds.Length)
+        {
+            ModelState.AddModelError(nameof(dtoMovie.GenreIds), "One or more genre IDs do not exist.");
+        }
+
+        var actorIds = dtoMovie.ActorIds.Distinct().ToArray();
+        var actors = await _context.Set<Actor>()
+            .Where(actor => actorIds.Contains(actor.Id))
+            .ToListAsync();
+
+        if (actors.Count != actorIds.Length)
+        {
+            ModelState.AddModelError(nameof(dtoMovie.ActorIds), "One or more actor IDs do not exist.");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
         var movie = new Movie
         {
             Year = dtoMovie.Year,
             Duration = dtoMovie.Duration,
             Title = dtoMovie.Title,
-            Genre = dtoMovie.Genre
+            Genres = genres,
+            Actors = actors,
+            Reviews = dtoMovie.Reviews
+                .Select(review => new Review
+                {
+                    Rating = review.Rating,
+                    ReviewerName = review.ReviewerName,
+                    Comment = review.Comment
+                })
+                .ToList(),
+            Details = dtoMovie.Details is null
+                ? null
+                : new MovieDetails
+                {
+                    Budget = dtoMovie.Details.Budget,
+                    Synopsis = dtoMovie.Details.Synopsis,
+                    Language = dtoMovie.Details.Language
+                }
         };
 
         _context.Movies.Add(movie);
         await _context.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetMovie), new { id = movie.Id }, movie);
+        return CreatedAtAction(
+            nameof(GetMovie),
+            new { id = movie.Id },
+            DtoMapper.ToDto(movie));
     }
 
     // DELETE: api/Movie/5

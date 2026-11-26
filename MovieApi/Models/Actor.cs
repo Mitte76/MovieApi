@@ -5,7 +5,7 @@ namespace MovieApi.Models
     public class Actor
     {
         public int Id { get; set; }
-        public int BirthYear { get; set; }
+        public string BirthYear { get; set; } = string.Empty;
 
         [Required]
         public string Name { get; set; } = string.Empty;
