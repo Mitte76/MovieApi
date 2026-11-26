@@ -10,7 +10,6 @@ namespace MovieApi.DTOs.Movies.Read
 
         [Required]
         public string Title { get; set; } = string.Empty;
-
         public ICollection<GenreDto> Genres { get; set; } = [];
     }
 }

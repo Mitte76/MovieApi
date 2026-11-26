@@ -22,25 +22,23 @@ public class MoviesController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<MovieDto>>> GetMovie()
     {
-        var movies = await _context.Movies
-            .AsNoTracking()
+        var movies = await _context
+            .Movies.AsNoTracking()
             .Include(movie => movie.Details)
             .Include(movie => movie.Genres)
             .Include(movie => movie.Reviews)
             .Include(movie => movie.Actors)
             .ToListAsync();
 
-        return movies
-            .Select(MovieDtoMapper.ToDto)
-            .ToList();
+        return movies.Select(MovieDtoMapper.ToDto).ToList();
     }
 
     // GET: api/Movie/5
     [HttpGet("{id}")]
     public async Task<ActionResult<MovieDto>> GetMovie(int id)
     {
-        var movie = await _context.Movies
-            .AsNoTracking()
+        var movie = await _context
+            .Movies.AsNoTracking()
             .Include(movie => movie.Details)
             .Include(movie => movie.Genres)
             .Include(movie => movie.Reviews)
@@ -53,7 +51,6 @@ public class MoviesController : ControllerBase
         }
         MovieDto movieDto = MovieDtoMapper.ToDto(movie);
 
-
         return movieDto;
     }
 
@@ -61,8 +58,8 @@ public class MoviesController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> PutMovie(int id, UpdateMovieDto dtoMovie)
     {
-        var movie = await _context.Movies
-            .Include(movie => movie.Genres)
+        var movie = await _context
+            .Movies.Include(movie => movie.Genres)
             .Include(movie => movie.Actors)
             .Include(movie => movie.Details)
             .FirstOrDefaultAsync(movie => movie.Id == id);
@@ -73,23 +70,31 @@ public class MoviesController : ControllerBase
         }
 
         var genreIds = dtoMovie.GenreIds.Distinct().ToArray();
-        var genres = await _context.Set<Genre>()
+        var genres = await _context
+            .Set<Genre>()
             .Where(genre => genreIds.Contains(genre.Id))
             .ToListAsync();
 
         if (genres.Count != genreIds.Length)
         {
-            ModelState.AddModelError(nameof(dtoMovie.GenreIds), "One or more genre IDs do not exist.");
+            ModelState.AddModelError(
+                nameof(dtoMovie.GenreIds),
+                "One or more genre IDs do not exist."
+            );
         }
 
         var actorIds = dtoMovie.ActorIds.Distinct().ToArray();
-        var actors = await _context.Set<Actor>()
+        var actors = await _context
+            .Set<Actor>()
             .Where(actor => actorIds.Contains(actor.Id))
             .ToListAsync();
 
         if (actors.Count != actorIds.Length)
         {
-            ModelState.AddModelError(nameof(dtoMovie.ActorIds), "One or more actor IDs do not exist.");
+            ModelState.AddModelError(
+                nameof(dtoMovie.ActorIds),
+                "One or more actor IDs do not exist."
+            );
         }
 
         if (!ModelState.IsValid)
@@ -117,7 +122,7 @@ public class MoviesController : ControllerBase
             {
                 Budget = dtoMovie.Details.Budget,
                 Synopsis = dtoMovie.Details.Synopsis,
-                Language = dtoMovie.Details.Language
+                Language = dtoMovie.Details.Language,
             };
         }
         else
@@ -131,30 +136,37 @@ public class MoviesController : ControllerBase
         return NoContent();
     }
 
-
     // POST: api/Movie
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPost]
     public async Task<ActionResult<MovieDto>> PostMovie(CreateMovieDto dtoMovie)
     {
         var genreIds = dtoMovie.GenreIds.Distinct().ToArray();
-        var genres = await _context.Set<Genre>()
+        var genres = await _context
+            .Set<Genre>()
             .Where(genre => genreIds.Contains(genre.Id))
             .ToListAsync();
 
         if (genres.Count != genreIds.Length)
         {
-            ModelState.AddModelError(nameof(dtoMovie.GenreIds), "One or more genre IDs do not exist.");
+            ModelState.AddModelError(
+                nameof(dtoMovie.GenreIds),
+                "One or more genre IDs do not exist."
+            );
         }
 
         var actorIds = dtoMovie.ActorIds.Distinct().ToArray();
-        var actors = await _context.Set<Actor>()
+        var actors = await _context
+            .Set<Actor>()
             .Where(actor => actorIds.Contains(actor.Id))
             .ToListAsync();
 
         if (actors.Count != actorIds.Length)
         {
-            ModelState.AddModelError(nameof(dtoMovie.ActorIds), "One or more actor IDs do not exist.");
+            ModelState.AddModelError(
+                nameof(dtoMovie.ActorIds),
+                "One or more actor IDs do not exist."
+            );
         }
 
         if (!ModelState.IsValid)
@@ -169,12 +181,12 @@ public class MoviesController : ControllerBase
             Title = dtoMovie.Title,
             Genres = genres,
             Actors = actors,
-            Reviews = dtoMovie.Reviews
-                .Select(review => new Review
+            Reviews = dtoMovie
+                .Reviews.Select(review => new Review
                 {
                     Rating = review.Rating,
                     ReviewerName = review.ReviewerName,
-                    Comment = review.Comment
+                    Comment = review.Comment,
                 })
                 .ToList(),
             Details = dtoMovie.Details is null
@@ -183,8 +195,8 @@ public class MoviesController : ControllerBase
                 {
                     Budget = dtoMovie.Details.Budget,
                     Synopsis = dtoMovie.Details.Synopsis,
-                    Language = dtoMovie.Details.Language
-                }
+                    Language = dtoMovie.Details.Language,
+                },
         };
 
         _context.Movies.Add(movie);
@@ -193,7 +205,8 @@ public class MoviesController : ControllerBase
         return CreatedAtAction(
             nameof(GetMovie),
             new { id = movie.Id },
-            MovieDtoMapper.ToDto(movie));
+            MovieDtoMapper.ToDto(movie)
+        );
     }
 
     // DELETE: api/Movie/5

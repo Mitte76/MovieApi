@@ -15,27 +15,28 @@ public class ActorsController : ControllerBase
         _context = context;
     }
 
-    // GET: api/Actor
-    //[HttpGet]
-    //public async Task<ActionResult<IEnumerable<Actor>>> GetActor()
-    //{
-    //    return await _context.Actor.ToListAsync();
-    //}
-
+    //GET: api/Actor
     [HttpGet]
+    public async Task<ActionResult<IEnumerable<ActorDto>>> GetActor()
+    {
+        var actors = await _context.Actor
+            .AsNoTracking().ToListAsync();
+
+        return actors.Select(ActorDtoMapper.ToDto).ToList();
+    }
+
+    [HttpGet("/detailed")]
     public async Task<ActionResult<IEnumerable<ActorDetailedDto>>> GetActorDetailed()
     {
         var actors = await _context.Actor
             .AsNoTracking()
             .Include(actor => actor.Movies)
                     .ThenInclude(movie => movie.Genres)
-
             .ToListAsync();
 
         return actors.Select(ActorDtoMapper.ToDetailedDto)
             .ToList();
 
-        //return await _context.Actor.ToListAsync();
     }
 
 

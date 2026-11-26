@@ -101,15 +101,13 @@ namespace MovieApi.Mapping
                         Year = movie.Year,
                         Duration = movie.Duration,
                         Genres = movie.Genres
-                    .Select(genre => new GenreDto
-                    {
-                        Id = genre.Id,
-                        GenreName = genre.GenreName
-                    })
-                    .ToList(),
+                        .Select(genre => new GenreDto
+                        {
+                            Id = genre.Id,
+                            GenreName = genre.GenreName
+                        }).ToList(),
 
-                    })
-                    .ToList(),
+                    }).ToList(),
             };
         }
 
