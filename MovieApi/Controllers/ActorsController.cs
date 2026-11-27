@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MovieApi.Data;
-using MovieApi.DTOs.Movies.Read;
+using MovieApi.DTOs.Read;
 using MovieApi.Mapping;
 using MovieApi.Models;
 
@@ -17,7 +17,7 @@ namespace MovieApi.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ActorDto>>> GetActor()
         {
-            var actors = await _context.Actor.AsNoTracking().ToListAsync();
+            var actors = await _context.Actors.AsNoTracking().ToListAsync();
 
             return actors.Select(ActorDtoMapper.ToDto).ToList();
         }
@@ -26,7 +26,7 @@ namespace MovieApi.Controllers
         public async Task<ActionResult<IEnumerable<ActorDetailedDto>>> GetActorDetailed()
         {
             var actors = await _context
-                .Actor.AsNoTracking()
+                .Actors.AsNoTracking()
                 .Include(actor => actor.Movies)
                     .ThenInclude(movie => movie.Genres)
                 .ToListAsync();
@@ -38,7 +38,7 @@ namespace MovieApi.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<ActorDto>> GetActor(int id)
         {
-            var actor = await _context.Actor.FindAsync(id);
+            var actor = await _context.Actors.FindAsync(id);
 
             if (actor == null)
             {
@@ -85,7 +85,7 @@ namespace MovieApi.Controllers
         [HttpPost]
         public async Task<ActionResult<Actor>> PostActor(Actor actor)
         {
-            _context.Actor.Add(actor);
+            _context.Actors.Add(actor);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction("GetActor", new { id = actor.Id }, actor);
@@ -95,13 +95,13 @@ namespace MovieApi.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteActor(int? id)
         {
-            var actor = await _context.Actor.FindAsync(id);
+            var actor = await _context.Actors.FindAsync(id);
             if (actor == null)
             {
                 return NotFound();
             }
 
-            _context.Actor.Remove(actor);
+            _context.Actors.Remove(actor);
             await _context.SaveChangesAsync();
 
             return NoContent();
@@ -109,7 +109,7 @@ namespace MovieApi.Controllers
 
         private bool ActorExists(int? id)
         {
-            return _context.Actor.Any(e => e.Id == id);
+            return _context.Actors.Any(e => e.Id == id);
         }
     }
 }

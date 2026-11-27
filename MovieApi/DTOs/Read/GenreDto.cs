@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace MovieApi.DTOs.Movies.Read
+namespace MovieApi.DTOs.Read
 {
     public class GenreDto
     {

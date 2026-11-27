@@ -1,4 +1,4 @@
-namespace MovieApi.DTOs.Movies.Read
+namespace MovieApi.DTOs.Read
 {
     public class ActorDetailedDto
     {
@@ -7,6 +7,5 @@ namespace MovieApi.DTOs.Movies.Read
         public string BirthYear { get; set; } = string.Empty;
 
         public ICollection<MovieDto> Movies { get; set; } = [];
-
     }
 }

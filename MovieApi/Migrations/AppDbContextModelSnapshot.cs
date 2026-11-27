@@ -69,7 +69,7 @@ namespace MovieApi.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Actor");
+                    b.ToTable("Actors");
                 });
 
             modelBuilder.Entity("MovieApi.Models.Genre", b =>
@@ -176,7 +176,7 @@ namespace MovieApi.Migrations
 
                     b.HasIndex("MovieId");
 
-                    b.ToTable("Review", t =>
+                    b.ToTable("Reviews", t =>
                         {
                             t.HasCheckConstraint("CK_Review_Rating", "[Rating] >= 1 AND [Rating] <= 5");
                         });

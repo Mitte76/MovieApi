@@ -1,4 +1,4 @@
-﻿using MovieApi.DTOs.Movies.Read;
+﻿using MovieApi.DTOs.Read;
 using MovieApi.Models;
 
 namespace MovieApi.Mapping

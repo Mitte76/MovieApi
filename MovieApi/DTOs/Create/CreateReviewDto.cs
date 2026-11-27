@@ -1,11 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace MovieApi.DTOs.Movies.Read
+namespace MovieApi.DTOs.Create
 {
-    public class ReviewDto
+    public class CreateReviewDto
     {
-        public int Id { get; set; }
-
         [Range(1, 5)]
         public int Rating { get; set; }
 
@@ -14,6 +12,5 @@ namespace MovieApi.DTOs.Movies.Read
 
         [Required]
         public string Comment { get; set; } = string.Empty;
-
     }
 }

@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MovieApi.Data;
-using MovieApi.DTOs.Movies.Create;
-using MovieApi.DTOs.Movies.Read;
-using MovieApi.DTOs.Movies.Update;
+using MovieApi.DTOs.Create;
+using MovieApi.DTOs.Read;
+using MovieApi.DTOs.Update;
 using MovieApi.Mapping;
 using MovieApi.Models;
 

@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace MovieApi.DTOs.Movies.Read
+namespace MovieApi.DTOs.Read
 {
-    public class MovieDto
+    public class MovieDetailedDto
     {
         public int Id { get; set; }
         public string Year { get; set; } = string.Empty;
@@ -10,6 +10,10 @@ namespace MovieApi.DTOs.Movies.Read
 
         [Required]
         public string Title { get; set; } = string.Empty;
+
         public ICollection<GenreDto> Genres { get; set; } = [];
+        public DetailsDto? Details { get; set; }
+        public ICollection<ReviewDto> Reviews { get; set; } = [];
+        public ICollection<ActorDto> Actors { get; set; } = [];
     }
 }
