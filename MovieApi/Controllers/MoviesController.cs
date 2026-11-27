@@ -15,19 +15,46 @@ namespace MovieApi.Controllers
     {
         private readonly MovieApiContext _context = context;
 
-        // GET: api/Movie
+        // GET: api/Movie?details=true&reviews=true&actors=true&genre=true
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<MovieDto>>> GetMovie()
+        public async Task<ActionResult<IEnumerable<MovieDetailedDto>>> GetMovie(
+            [FromQuery] bool details = false,
+            [FromQuery] bool reviews = false,
+            [FromQuery] bool actors = false,
+            [FromQuery] bool genre = false,
+            [FromQuery] bool all = false
+        )
         {
-            var movies = await _context
-                .Movies.AsNoTracking()
-                .Include(movie => movie.Details)
-                .Include(movie => movie.Genres)
-                .Include(movie => movie.Reviews)
-                .Include(movie => movie.Actors)
-                .ToListAsync();
+            var includeDetails = details || all;
+            var includeReviews = reviews || all;
+            var includeActors = actors || all;
+            var includeGenre = genre || all;
 
-            return movies.Select(MovieDtoMapper.ToDto).ToList();
+            IQueryable<Movie> query = _context.Movies.AsNoTracking();
+
+            if (includeDetails)
+            {
+                query = query.Include(movie => movie.Details);
+            }
+
+            if (includeReviews)
+            {
+                query = query.Include(movie => movie.Reviews);
+            }
+
+            if (includeActors)
+            {
+                query = query.Include(movie => movie.Actors);
+            }
+
+            if (includeGenre)
+            {
+                query = query.Include(movie => movie.Genres);
+            }
+
+            var movies = await query.ToListAsync();
+
+            return movies.Select(DtoMapper.MovieToDetailedDto).ToList();
         }
 
         // GET: api/Movie/5
@@ -46,7 +73,7 @@ namespace MovieApi.Controllers
             {
                 return NotFound();
             }
-            MovieDto movieDto = MovieDtoMapper.ToDto(movie);
+            MovieDto movieDto = DtoMapper.MovieToDto(movie);
 
             return movieDto;
         }
@@ -202,7 +229,7 @@ namespace MovieApi.Controllers
             return CreatedAtAction(
                 nameof(GetMovie),
                 new { id = movie.Id },
-                MovieDtoMapper.ToDto(movie)
+                DtoMapper.MovieToDto(movie)
             );
         }
 

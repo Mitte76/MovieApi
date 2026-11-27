@@ -15,11 +15,19 @@ namespace MovieApi.Controllers
 
         //GET: api/Actor
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ActorDto>>> GetActor()
+        public async Task<ActionResult<IEnumerable<ActorDetailedDto>>> GetActor(
+            [FromQuery] bool includeMovies = false
+        )
         {
-            var actors = await _context.Actors.AsNoTracking().ToListAsync();
+            IQueryable<Actor> query = _context.Actors.AsNoTracking();
 
-            return actors.Select(ActorDtoMapper.ToDto).ToList();
+            if (includeMovies)
+            {
+                query = query.Include(actor => actor.Movies).ThenInclude(movie => movie.Genres);
+            }
+            var actors = await query.ToListAsync();
+
+            return actors.Select(DtoMapper.ActorToDetailedDto).ToList();
         }
 
         [HttpGet("/detailed")]
@@ -31,7 +39,7 @@ namespace MovieApi.Controllers
                     .ThenInclude(movie => movie.Genres)
                 .ToListAsync();
 
-            return actors.Select(ActorDtoMapper.ToDetailedDto).ToList();
+            return actors.Select(DtoMapper.ActorToDetailedDto).ToList();
         }
 
         // GET: api/Actor/5
@@ -44,7 +52,7 @@ namespace MovieApi.Controllers
             {
                 return NotFound();
             }
-            ActorDto actorDto = ActorDtoMapper.ToDto(actor);
+            ActorDto actorDto = DtoMapper.ActorToDto(actor);
 
             return actorDto;
         }

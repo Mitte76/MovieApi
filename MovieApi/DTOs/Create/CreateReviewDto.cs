@@ -4,6 +4,9 @@ namespace MovieApi.DTOs.Create
 {
     public class CreateReviewDto
     {
+        [Range(1, int.MaxValue)]
+        public int MovieId { get; set; }
+
         [Range(1, 5)]
         public int Rating { get; set; }
 

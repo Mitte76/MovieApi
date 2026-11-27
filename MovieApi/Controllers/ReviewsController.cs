@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MovieApi.Data;
+using MovieApi.DTOs.Create;
+using MovieApi.DTOs.Read;
+using MovieApi.Mapping;
 using MovieApi.Models;
 
 namespace MovieApi.Controllers
@@ -13,14 +16,16 @@ namespace MovieApi.Controllers
 
         // GET: api/Review
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Review>>> GetReview()
+        public async Task<ActionResult<IEnumerable<ReviewDto>>> GetReview()
         {
-            return await _context.Reviews.ToListAsync();
+            var reviews = await _context.Reviews.AsNoTracking().ToListAsync();
+
+            return reviews.Select(DtoMapper.ReviewToDto).ToList();
         }
 
         // GET: api/Review/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Review>> GetReview(int id)
+        public async Task<ActionResult<ReviewDto>> GetReview(int id)
         {
             var review = await _context.Reviews.FindAsync(id);
 
@@ -29,7 +34,8 @@ namespace MovieApi.Controllers
                 return NotFound();
             }
 
-            return review;
+            ReviewDto reviewDto = DtoMapper.ReviewToDto(review);
+            return reviewDto;
         }
 
         // PUT: api/Review/5
@@ -63,15 +69,32 @@ namespace MovieApi.Controllers
             return NoContent();
         }
 
-        // POST: api/Review
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Review>> PostReview(Review review)
+        public async Task<ActionResult<ReviewDto>> PostReview(CreateReviewDto reviewDto)
         {
+            var movie = await _context.Movies.FindAsync(reviewDto.MovieId);
+
+            if (movie is null)
+            {
+                return NotFound($"Ingen film hittades med id {reviewDto.MovieId}.");
+            }
+
+            var review = new Review
+            {
+                Rating = reviewDto.Rating,
+                ReviewerName = reviewDto.ReviewerName,
+                Comment = reviewDto.Comment,
+                Movie = movie,
+            };
+
             _context.Reviews.Add(review);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetReview", new { id = review.Id }, review);
+            return CreatedAtAction(
+                "GetReview",
+                new { id = review.Id },
+                DtoMapper.ReviewToDto(review)
+            );
         }
 
         // DELETE: api/Review/5
