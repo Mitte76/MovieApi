@@ -5,7 +5,6 @@ namespace MovieApi.Mapping
 {
     public static class MovieDtoMapper
     {
-
         public static MovieDto ToDto(Movie movie)
         {
             return new MovieDto
@@ -14,17 +13,15 @@ namespace MovieApi.Mapping
                 Year = movie.Year,
                 Duration = movie.Duration,
                 Title = movie.Title,
-                Genres = movie.Genres
-                    .Select(genre => new GenreDto
+                Genres = movie
+                    .Genres.Select(genre => new GenreDto
                     {
                         Id = genre.Id,
-                        GenreName = genre.GenreName
+                        GenreName = genre.GenreName,
                     })
                     .ToList(),
-
             };
         }
-
 
         public static MovieDetailedDto ToDetailedDto(Movie movie)
         {
@@ -34,11 +31,11 @@ namespace MovieApi.Mapping
                 Year = movie.Year,
                 Duration = movie.Duration,
                 Title = movie.Title,
-                Genres = movie.Genres
-                    .Select(genre => new GenreDto
+                Genres = movie
+                    .Genres.Select(genre => new GenreDto
                     {
                         Id = genre.Id,
-                        GenreName = genre.GenreName
+                        GenreName = genre.GenreName,
                     })
                     .ToList(),
 
@@ -48,71 +45,28 @@ namespace MovieApi.Mapping
                     {
                         Budget = movie.Details.Budget,
                         Synopsis = movie.Details.Synopsis,
-                        Language = movie.Details.Language
+                        Language = movie.Details.Language,
                     },
 
-                Reviews = movie.Reviews
-                    .Select(review => new ReviewDto
+                Reviews = movie
+                    .Reviews.Select(review => new ReviewDto
                     {
                         Id = review.Id,
                         Rating = review.Rating,
                         ReviewerName = review.ReviewerName,
-                        Comment = review.Comment
+                        Comment = review.Comment,
                     })
                     .ToList(),
 
-                Actors = movie.Actors
-                    .Select(actor => new ActorDto
+                Actors = movie
+                    .Actors.Select(actor => new ActorDto
                     {
                         Id = actor.Id,
                         Name = actor.Name,
-                        BirthYear = actor.BirthYear
+                        BirthYear = actor.BirthYear,
                     })
-                    .ToList()
+                    .ToList(),
             };
         }
     }
-
-    public static class ActorDtoMapper
-    {
-
-        public static ActorDto ToDto(Actor actor)
-        {
-            return new ActorDto
-            {
-                Id = actor.Id,
-                Name = actor.Name,
-                BirthYear = actor.BirthYear,
-            };
-        }
-
-        public static ActorDetailedDto ToDetailedDto(Actor actor)
-        {
-            return new ActorDetailedDto
-            {
-                Id = actor.Id,
-                Name = actor.Name,
-                BirthYear = actor.BirthYear,
-                Movies = actor.Movies
-                    .Select(movie => new MovieDto
-                    {
-                        Id = movie.Id,
-                        Title = movie.Title,
-                        Year = movie.Year,
-                        Duration = movie.Duration,
-                        Genres = movie.Genres
-                        .Select(genre => new GenreDto
-                        {
-                            Id = genre.Id,
-                            GenreName = genre.GenreName
-                        }).ToList(),
-
-                    }).ToList(),
-            };
-        }
-
-
-    }
-
-
 }
